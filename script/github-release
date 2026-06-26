@@ -3,7 +3,7 @@
 set -e
 
 declare -r git_root=$(git rev-parse --show-toplevel)
-declare -r app_name="swappy"
+declare -r app_name="swappy-ocr"
 declare -r release_folder="$git_root/release"
 
 declare version=""
@@ -53,7 +53,7 @@ git_build_archive() {
 download_source_for_release() {
   echo "downloading source assets..."
   cd $release_folder
-  curl --location --output github-$app_name-$version.tar.gz https://github.com/jtheoof/$app_name/archive/v$version.tar.gz
+  curl --location --output github-$app_name-$version.tar.gz https://github.com/buecherregale/$app_name/archive/v$version.tar.gz
 }
 
 verify_sha256_checksums() {

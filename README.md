@@ -55,6 +55,7 @@ auto_save=false
 custom_color=rgba(193,125,17,1)
 transparent=false
 transparency=50
+tesseract_languages=eng
 ```
 
 - `save_dir` is where swappshots will be saved, can contain env variables, when it does not exist, swappy attempts to create it first, but does not abort if directory creation fails
@@ -70,6 +71,7 @@ transparency=50
 - `custom_color` is used to set a default value for the custom color
 - `transparency` is used to set transparency of everything that is drawn during startup
 - `transparent` is used to toggle transparency during startup
+- `tesseract_languages`: are the languages for which the tesseract data is loaded. They follow the tesseract syntax, being joine with `+`. Tesseract data has to be installed seperately, most likely via your distros package manager.
 
 
 ## Keyboard Shortcuts
@@ -118,12 +120,9 @@ transparency=50
 
 ## Installation
 
-- [Arch Linux](https://archlinux.org/packages/extra/x86_64/swappy/)
-- [Arch Linux (git)](https://aur.archlinux.org/packages/swappy-git)
-- [Fedora](https://src.fedoraproject.org/rpms/swappy)
-- [Gentoo](https://packages.gentoo.org/packages/gui-apps/swappy)
-- [openSUSE](https://build.opensuse.org/package/show/X11:Wayland/swappy)
-- [Void Linux](https://github.com/void-linux/void-packages/tree/master/srcpkgs/swappy)
+The original program provides packages for all common distributions.
+Install this fork manually after building from source.
+For archlinux there is a usable [PKGBUILD-repository](https://github.com/buecherregale/swappy-ocr-git).
 
 ## Building from source
 
@@ -184,7 +183,7 @@ We rely on [standard-version](https://github.com/conventional-changelog/standard
 
 Make sure everything is valid in the Draft release, then publish the draft.
 
-Release tarballs are signed with this PGP key: `F44D05A50F6C9EB5C81BCF966A6B35DBE9442683`
+Release tarballs are signed with this PGP key: `C3B92663D4DDF2E99F1B293683E37B837339F331`
 
 ## License
 

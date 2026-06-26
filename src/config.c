@@ -26,6 +26,7 @@ static void print_config(struct swappy_config *config) {
   g_info("auto_save: %d", config->auto_save);
   g_info("custom_color: %s", config->custom_color);
   g_info("transparent: %d", config->transparent);
+  g_info("tesseract_languages: %s", config->tesseract_languages);
 }
 
 static char *get_default_save_dir() {
@@ -90,6 +91,7 @@ static void load_config_from_file(struct swappy_config *config,
   gchar *custom_color = NULL;
   gboolean transparent;
   GError *error = NULL;
+  gchar *tesseract_languages = NULL;
 
   if (file == NULL) {
     return;
@@ -287,6 +289,15 @@ static void load_config_from_file(struct swappy_config *config,
     error = NULL;
   }
 
+  tesseract_languages = g_key_file_get_string(gkf, group, "tesseract_languages", &error);
+  if (error == NULL) {
+    config->tesseract_languages = tesseract_languages;
+  } else {
+    g_info("tesseract_languages is missing in %s (%s)", file, error->message);
+    g_error_free(error);
+    error = NULL;
+  }
+
   g_key_file_free(gkf);
 }
 
@@ -308,6 +319,7 @@ static void load_default_config(struct swappy_config *config) {
   config->custom_color = g_strdup(CONFIG_CUSTOM_COLOR_DEFAULT);
   config->transparent = CONFIG_TRANSPARENT_DEFAULT;
   config->transparency = CONFIG_TRANSPARENCY_DEFAULT;
+  config->tesseract_languages = CONFIG_TESSERACT_LANGUAGES_DEFAULT;
 }
 
 void config_load(struct swappy_state *state) {
@@ -335,6 +347,7 @@ void config_free(struct swappy_state *state) {
     g_free(state->config->save_filename_format);
     g_free(state->config->text_font);
     g_free(state->config->custom_color);
+    g_free(state->config->tesseract_languages);
     g_free(state->config);
     state->config = NULL;
   }

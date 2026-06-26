@@ -1,9 +1,9 @@
 {
-  "name": "swappy",
+  "name": "swappy-ocr",
   "version": "1.8.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jtheoof/swappy.git"
+    "url": "https://github.com/buecherregale/swappy-ocr.git"
   },
   "author": "Jeremy Attali"
 }

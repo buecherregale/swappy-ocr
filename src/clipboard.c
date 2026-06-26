@@ -10,14 +10,11 @@
 #define gtk_clipboard_t GtkClipboard
 #define gdk_pixbuf_t GdkPixbuf
 
-static gboolean send_pixbuf_to_wl_copy(gdk_pixbuf_t *pixbuf) {
+static bool send_bytes_to_wl_copy(const void *buffer, size_t size, const char *mime_type) {
   pid_t clipboard_process = 0;
   int pipefd[2];
   int status;
   ssize_t written;
-  gsize size;
-  gchar *buffer = NULL;
-  GError *error = NULL;
 
   if (pipe(pipefd) < 0) {
     g_warning("unable to pipe for copy process to work");
@@ -33,30 +30,19 @@ static gboolean send_pixbuf_to_wl_copy(gdk_pixbuf_t *pixbuf) {
     dup2(pipefd[0], STDIN_FILENO);
     close(pipefd[0]);
     execlp("wl-copy", "wl-copy", "-t", "image/png", NULL);
-    g_warning(
-        "Unable to copy contents to clipboard. Please make sure you have "
-        "`wl-clipboard`, `xclip`, or `xsel` installed.");
+    g_warning("Failed to copy content to wl-copy: %s", g_strerror(errno));
     exit(1);
   }
   close(pipefd[0]);
 
-  gdk_pixbuf_save_to_buffer(pixbuf, &buffer, &size, "png", &error, NULL);
-
-  if (error != NULL) {
-    g_critical("unable to save pixbuf to buffer for copy: %s", error->message);
-    g_error_free(error);
-    return false;
-  }
-
+  // actual write
   written = write(pipefd[1], buffer, size);
   if (written == -1) {
     g_warning("unable to write to pipe fd for copy");
-    g_free(buffer);
     return false;
   }
 
   close(pipefd[1]);
-  g_free(buffer);
   waitpid(clipboard_process, &status, 0);
 
   if (WIFEXITED(status)) {
@@ -66,9 +52,34 @@ static gboolean send_pixbuf_to_wl_copy(gdk_pixbuf_t *pixbuf) {
   return false;
 }
 
+static gboolean send_pixbuf_to_wl_copy(gdk_pixbuf_t *pixbuf) {
+  gsize size;
+  gchar *buffer = NULL;
+  GError *error = NULL;
+
+  gdk_pixbuf_save_to_buffer(pixbuf, &buffer, &size, "png", &error, NULL);
+  if (error != NULL) {
+    g_critical("unable to save pixbuf to buffer for copy: %s", error->message);
+    g_error_free(error);
+    return false;
+  }
+
+  bool success = send_bytes_to_wl_copy(buffer, size, "image/png");
+
+  g_free(buffer);
+
+  return success;
+}
+
 static void send_pixbuf_to_gdk_clipboard(gdk_pixbuf_t *pixbuf) {
   gtk_clipboard_t *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
   gtk_clipboard_set_image(clipboard, pixbuf);
+  gtk_clipboard_store(clipboard);  // Does not work for Wayland gdk backend
+}
+
+static void send_text_to_gdk_clipboard(char *utf8Buf, size_t length) {
+  gtk_clipboard_t *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+  gtk_clipboard_set_text(clipboard, utf8Buf, length);
   gtk_clipboard_store(clipboard);  // Does not work for Wayland gdk backend
 }
 
@@ -82,9 +93,19 @@ bool clipboard_copy_drawing_area_to_selection(struct swappy_state *state) {
 
   g_object_unref(pixbuf);
 
-  if (state->config->early_exit) {
+  if (state->config->early_exit)
     gtk_main_quit();
-  }
+
+  return true;
+}
+
+bool clipboard_copy_text_to_gdk_clipboard(char *text) {
+  size_t len = strlen(text);
+  bool success = send_bytes_to_wl_copy(text, len, "text/plain");
+
+  // fall back
+  if (!success)
+    send_text_to_gdk_clipboard(text, len);
 
   return true;
 }

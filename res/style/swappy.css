@@ -27,3 +27,21 @@
 .color-box .color-blue image {
   background-color: rgb(0, 0, 255);
 }
+
+/* ocr button */
+button.ocr-overlay {
+    background: transparent;
+    border: 2px solid #4A90D9;       /* outline */
+    padding: 0;
+    min-width: 0;
+    min-height: 0;
+    box-shadow: none;
+}
+
+button.ocr-overlay:hover {
+    background: rgba(74, 144, 217, 0.12);
+}
+
+button.ocr-overlay:active {
+    background: rgba(74, 144, 217, 0.25);
+}

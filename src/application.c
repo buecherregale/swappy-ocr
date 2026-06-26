@@ -13,6 +13,7 @@
 #include "pixbuf.h"
 #include "render.h"
 #include "swappy.h"
+#include "ocr.h"
 
 static void update_ui_undo_redo(struct swappy_state *state) {
   GtkWidget *undo = GTK_WIDGET(state->ui->undo);
@@ -72,6 +73,7 @@ static void update_ui_transparent_toggle_button(struct swappy_state *state) {
 
 void application_finish(struct swappy_state *state) {
   g_debug("application finishing, cleaning up");
+
   paint_free_all(state);
   pixbuf_free(state);
   cairo_surface_destroy(state->rendering_surface);
@@ -83,6 +85,9 @@ void application_finish(struct swappy_state *state) {
     }
     g_free(state->temp_file_str);
   }
+  ocr_cleanup(state);
+  g_free(state->ocr);
+
   g_free(state->file_str);
   g_free(state->geometry);
   g_free(state->window);
@@ -379,12 +384,19 @@ void save_clicked_handler(GtkWidget *widget, struct swappy_state *state) {
 
 void clear_clicked_handler(GtkWidget *widget, struct swappy_state *state) {
   action_clear(state);
+  ocr_remove_overlay_buttons(state);
 }
 
 void copy_clicked_handler(GtkWidget *widget, struct swappy_state *state) {
   // Commit a potential paint (e.g. text being written)
   commit_state(state);
   clipboard_copy_drawing_area_to_selection(state);
+}
+
+void ocr_clicked_handler(GtkWidget *widget, struct swappy_state *state) {
+  // Commit a potential paint (e.g. text being written)
+  commit_state(state);
+  ocr_find_text(widget, state);
 }
 
 void control_modifier_changed(bool pressed, struct swappy_state *state) {
@@ -816,20 +828,16 @@ static void compute_window_size_and_scaling_factor(struct swappy_state *state) {
          state->window->height);
 }
 
-static void apply_css(GtkWidget *widget, GtkStyleProvider *provider) {
-  gtk_style_context_add_provider(gtk_widget_get_style_context(widget), provider,
-                                 GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  if (GTK_IS_CONTAINER(widget)) {
-    gtk_container_forall(GTK_CONTAINER(widget), (GtkCallback)apply_css,
-                         provider);
-  }
-}
-
 static bool load_css(struct swappy_state *state) {
   GtkCssProvider *provider = gtk_css_provider_new();
   gtk_css_provider_load_from_resource(provider,
                                       "/me/jtheoof/swappy/style/swappy.css");
-  apply_css(GTK_WIDGET(state->ui->window), GTK_STYLE_PROVIDER(provider));
+  gtk_style_context_add_provider_for_screen(
+    gdk_screen_get_default(),
+    GTK_STYLE_PROVIDER(provider),
+    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+  );
+
   g_object_unref(provider);
   return true;
 }
@@ -873,6 +881,8 @@ static bool load_layout(struct swappy_state *state) {
 
   GtkWidget *area =
       GTK_WIDGET(gtk_builder_get_object(builder, "painting-area"));
+  GtkWidget *fixed =
+      GTK_WIDGET(gtk_builder_get_object(builder, "painting-parent"));
 
   state->ui->painting_box =
       GTK_BOX(gtk_builder_get_object(builder, "painting-box"));
@@ -926,6 +936,7 @@ static bool load_layout(struct swappy_state *state) {
   state->ui->arrow = arrow;
   state->ui->blur = blur;
   state->ui->area = area;
+  state->ui->fixed = fixed;
   state->ui->window = window;
 
   compute_window_size_and_scaling_factor(state);
@@ -1094,6 +1105,8 @@ bool application_init(struct swappy_state *state) {
 
   state->ui = g_new(struct swappy_state_ui, 1);
   state->ui->panel_toggled = false;
+
+  state->ocr = g_new(struct swappy_state_ocr, 1);
 
   g_signal_connect(state->app, "command-line", G_CALLBACK(command_line_handler),
                    state);

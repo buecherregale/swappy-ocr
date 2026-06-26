@@ -1,5 +1,5 @@
 project(
-	'swappy',
+	'swappy-ocr',
 	'c',
 	version: '1.8.0',
 	license: 'MIT',
@@ -42,6 +42,8 @@ pango = dependency('pango')
 math = cc.find_library('m')
 gtk = dependency('gtk+-3.0', version: '>=3.20.0')
 gio = dependency('gio-2.0')
+tesseract = dependency('tesseract')
+leptonica = dependency('lept')
 
 subdir('res')
 subdir('src/po')
@@ -61,6 +63,7 @@ executable(
 		'src/pixbuf.c',
 		'src/render.c',
 		'src/util.c',
+        'src/ocr.c',
 	]),
 	dependencies: [
 		cairo,
@@ -68,6 +71,8 @@ executable(
 		gio,
 		gtk,
 		math,
+        tesseract,
+        leptonica,
 	],
 	link_args: '-rdynamic',
 	include_directories: [swappy_inc],

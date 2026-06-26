@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <tesseract/capi.h>
 
 #define MAX_PATH 4096
 
@@ -119,6 +120,7 @@ struct swappy_state_ui {
   GtkIMContext *im_context;
 
   GtkWidget *area;
+  GtkWidget *fixed;
 
   GtkToggleButton *panel_toggle_button;
 
@@ -151,6 +153,11 @@ struct swappy_state_ui {
   GtkToggleButton *transparent;
 };
 
+struct swappy_state_ocr {
+  TessBaseAPI *api;
+  GtkWidget **overlay_buttons;
+};
+
 struct swappy_config {
   char *config_file;
   char *save_dir;
@@ -166,12 +173,14 @@ struct swappy_config {
   gboolean early_exit;
   gboolean auto_save;
   char *custom_color;
+  char *tesseract_languages;
 };
 
 struct swappy_state {
   GtkApplication *app;
 
   struct swappy_state_ui *ui;
+  struct swappy_state_ocr *ocr;
   struct swappy_config *config;
 
   GdkPixbuf *original_image;
