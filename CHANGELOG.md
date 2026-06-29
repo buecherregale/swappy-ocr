@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/buecherregale/swappy-ocr/compare/v1.8.0...v1.9.0) (2026-06-29)
+
+
+### Features
+
+* **i18n:** update turkish translation ([ff7d641](https://github.com/buecherregale/swappy-ocr/commit/ff7d641b8c0d461b8a90448a5893e4aa3a0533b1))
+* **ui:** add ocr support with tesseract ([1476bd2](https://github.com/buecherregale/swappy-ocr/commit/1476bd2f89db6e2de464755864cba069b3c15fb7))
+
 ## [1.8.0](https://github.com/jtheoof/swappy/compare/v1.7.1...v1.8.0) (2025-08-27)
 
 
